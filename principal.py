@@ -9,33 +9,62 @@ from listar_productos import listar_productos
 
 
 def tab_registrar(tab):
+    import tkinter as tk
+    from registrar_producto import registrar_producto
+
     tk.Label(tab, text="Registrar producto", font=("Arial", 14)).grid(row=0, column=0, columnspan=2, pady=10)
 
-    tk.Label(tab, text="Nombre").grid(row=1, column=0)
+    # 🔹 Codigo (solo mostrar)
+    tk.Label(tab, text="Codigo del producto").grid(row=1, column=0)
+    lbl_codigo = tk.Label(tab, text="---", fg="blue", font=("Arial", 10, "bold"))
+    lbl_codigo.grid(row=1, column=1)
+
+    # 🔹 Nombre
+    tk.Label(tab, text="Nombre").grid(row=2, column=0)
     ent_nombre = tk.Entry(tab)
-    ent_nombre.grid(row=1, column=1)
+    ent_nombre.grid(row=2, column=1)
 
-    tk.Label(tab, text="Precio").grid(row=2, column=0)
+    # 🔹 Precio
+    tk.Label(tab, text="Precio").grid(row=3, column=0)
     ent_precio = tk.Entry(tab)
-    ent_precio.grid(row=2, column=1)
+    ent_precio.grid(row=3, column=1)
 
-    tk.Label(tab, text="Cantidad").grid(row=3, column=0)
+    # 🔹 Cantidad
+    tk.Label(tab, text="Cantidad").grid(row=4, column=0)
     ent_cantidad = tk.Entry(tab)
-    ent_cantidad.grid(row=3, column=1)
+    ent_cantidad.grid(row=4, column=1)
 
-    lbl = tk.Label(tab, text="")
-    lbl.grid(row=5, column=0, columnspan=2)
+    # 🔹 Resultado
+    lbl_resultado = tk.Label(tab, text="")
+    lbl_resultado.grid(row=6, column=0, columnspan=2)
 
+    # 🔹 Función registrar
     def registrar():
-        r = registrar_producto(ent_nombre.get(), ent_precio.get(), ent_cantidad.get())
-        lbl.config(text=r["mensaje"], fg="green" if r["exito"] else "red")
+        r = registrar_producto(
+            ent_nombre.get(),
+            ent_precio.get(),
+            ent_cantidad.get()
+        )
 
-    tk.Button(tab, text="Registrar", command=registrar).grid(row=4, column=0)
-    tk.Button(tab, text="Limpiar", command=lambda: [
-        ent_nombre.delete(0, tk.END),
-        ent_precio.delete(0, tk.END),
+        if r["exito"]:
+            # Mostrar codigo generado
+            lbl_codigo.config(text=r["codigo"])
+            lbl_resultado.config(text=r["mensaje"], fg="green")
+        else:
+            lbl_resultado.config(text=r["mensaje"], fg="red")
+
+    # 🔹 Función limpiar
+    def limpiar():
+        ent_nombre.delete(0, tk.END)
+        ent_precio.delete(0, tk.END)
         ent_cantidad.delete(0, tk.END)
-    ]).grid(row=4, column=1)
+        lbl_codigo.config(text="---")
+        lbl_resultado.config(text="")
+
+    # 🔹 Botones
+    tk.Button(tab, text="Registrar", command=registrar).grid(row=5, column=0)
+    tk.Button(tab, text="Limpiar", command=limpiar).grid(row=5, column=1)
+
 
 
 def tab_buscar(tab):
