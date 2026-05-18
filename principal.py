@@ -137,11 +137,10 @@ def construir_tab_registrar(tab):
         nuevo = generar_codigo(cargar_inventario())
         lbl_codigo.config(text=nuevo)
  
-    def limpiar():
+    def limpiar(): #BUG13 CORREGIDO
         ent_nombre.delete(0, tk.END)
         ent_precio.delete(0, tk.END)
         ent_cantidad.delete(0, tk.END)
-        lbl_resultado.config(text="", fg=COLOR_TEXTO)
         actualizar_codigo_preview()
         ent_nombre.focus()
  
@@ -151,9 +150,15 @@ def construir_tab_registrar(tab):
             ent_precio.get(),
             ent_cantidad.get(),
         )
-        if resultado["exito"]:
+        if resultado["exito"]:#BUG13 CORREGIDO
             lbl_resultado.config(text=f"✔  {resultado['mensaje']}", fg=COLOR_EXITO)
-            limpiar()
+
+            ent_nombre.delete(0, tk.END)
+            ent_precio.delete(0, tk.END)
+            ent_cantidad.delete(0, tk.END)
+
+            actualizar_codigo_preview()
+            ent_nombre.focus()
         else:
             lbl_resultado.config(text=f"✘  {resultado['mensaje']}", fg=COLOR_ERROR)
  
@@ -161,7 +166,7 @@ def construir_tab_registrar(tab):
     frame_botones.grid(row=5, column=0, columnspan=2, padx=20, pady=10, sticky="w")
     estilo_boton(frame_botones, "Registrar", registrar).pack(side="left", padx=(0, 10))
     estilo_boton(frame_botones, "Limpiar", limpiar, color="#555577").pack(side="left")
- 
+    return actualizar_codigo_preview #BUG06 PASO 01 
     estilo_label(tab, "* Campos obligatorios", dim=True).grid(row=7, column=0, columnspan=2, padx=20, sticky="w")
  
  
@@ -336,6 +341,14 @@ def construir_tab_eliminar(tab):
         if not codigo:
             lbl_resultado.config(text="✘  Debes ingresar un código.", fg=COLOR_ERROR)
             return
+        
+        verificacion = buscar_por_codigo(codigo)#BUG08 CORREGIDO
+        if not verificacion["exito"]:
+            lbl_resultado.config(
+                text=f"✘  {verificacion['mensaje']}",
+                fg=COLOR_ERROR
+            )
+            return
  
         confirmar = messagebox.askyesno(
             "Confirmar eliminación",
@@ -419,6 +432,8 @@ def construir_tab_listar(tab):
             lbl_estado.config(text=resultado["mensaje"], fg=COLOR_TEXTO_DIM)
  
     cargar_lista()
+
+    return cargar_lista #BUG05 CORREGIDO
  
  
 # ═══════════════════════════════════════════════════════════
@@ -468,7 +483,7 @@ def main():
  
     notebook = ttk.Notebook(root)
     notebook.pack(fill="both", expand=True, padx=0, pady=0)
- 
+    func_cargar_lista = None#BUG05 CORREGIDO
     tabs_config = [
         ("➕ Registrar",  construir_tab_registrar),
         ("🔍 Buscar",     construir_tab_buscar),
@@ -476,11 +491,38 @@ def main():
         ("🗑 Eliminar",   construir_tab_eliminar),
         ("📋 Listar",     construir_tab_listar),
     ]
- 
+    tab_listar = None #BUG05 CORREGIDO
+    actualizar_preview_registrar = None #BUG06 
     for nombre_tab, constructor in tabs_config:
         frame = tk.Frame(notebook, bg=COLOR_PANEL)
         notebook.add(frame, text=nombre_tab)
-        constructor(frame)
+
+        if nombre_tab == "📋 Listar":
+            func_cargar_lista = constructor(frame)
+
+        elif nombre_tab == "➕ Registrar":
+            actualizar_preview_registrar = constructor(frame)
+
+        else:
+            constructor(frame)
+    
+    
+    def refrescar_tabs(event):
+        pestaña_actual = notebook.select()
+        texto_tab = notebook.tab(pestaña_actual, "text")
+
+        #BUG05 corregido
+        if texto_tab == "📋 Listar":
+            if func_cargar_lista:
+                func_cargar_lista()
+
+        #BUG06 corregido
+        elif texto_tab == "➕ Registrar":
+            if actualizar_preview_registrar:
+                actualizar_preview_registrar()
+    
+    notebook.bind("<<NotebookTabChanged>>", refrescar_tabs)
+    #BUG05 CORREGIDO
  
     root.mainloop()
  
